@@ -40,5 +40,8 @@
     "prepublish": "npm run compile",
     "pretest": "npm run compile",
     "test": "mocha"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   }
 }
