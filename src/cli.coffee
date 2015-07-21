@@ -16,7 +16,7 @@ module.exports = (config, argv) ->
 
   # opts: ext, path, template, redis
   trimmedConfig = {}
-  trimmedConfig[k] = v for k, v of config when k in ['ext', 'path', 'template', 'redis']
+  trimmedConfig[k] = v for k, v of config when k in ['ext', 'path', 'template', 'redis', 'redisAuth']
   migrate = new RedisMigrate trimmedConfig
 
   die = (message) ->

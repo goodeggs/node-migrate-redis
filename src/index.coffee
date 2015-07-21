@@ -31,8 +31,13 @@ module.exports = class Migrate
           #  done()
     """
 
+    # url (as redis://host:port)
     @opts.redis = @opts.redis() if typeof @opts.redis is 'function'
-    @redisClient = redis.createClient @opts.redis ? {}
+    # password (optional)
+    @opts.redisAuth = @opts.redisAuth() if typeof @opts.redisAuth is 'function'
+
+    {port, hostname} = require('url').parse @opts.redis ? ''
+    @redisClient = redis.createClient port, hostname, {auth_pass: @opts.redisAuth}
 
   log: (message) ->
     console.log message

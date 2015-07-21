@@ -24,6 +24,7 @@ npm install --save node-migrate-mongo
 cat << EOF- > Migratefile.coffee
   module.exports =
     redis: 'redis://localhost:6379'
+    redisAuth: 'secret'
 EOF
 migrate generate --name my_first_migration
 # edit it
