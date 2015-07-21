@@ -1,2 +1,2 @@
 module.exports =
-  redis: 'localhost/node_migrate_redis_test'
+  redis: 'redis://localhost:6379'

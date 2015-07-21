@@ -9,13 +9,13 @@ describe 'node-migrate-redis', ->
   migrate = null
 
   before 'setup', (done) ->
-    sinon.stub Migrate::, '_setKey', -> 'test_migrations'
+    sinon.stub Migrate::, 'setKey', -> 'test_migrations'
 
     @redisClient = redis.createClient()
     @redisClient.on 'ready', -> done()
 
   after ->
-    Migrate::_setKey.restore()
+    Migrate::setKey.restore()
 
   beforeEach 'wipe set', (done) ->
     @redisClient.del 'test_migrations', (err) -> done err

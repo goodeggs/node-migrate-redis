@@ -44,12 +44,13 @@ module.exports = class Migrate
     migration
 
   # store previously-run migration names in a set.
-  _setKey: ->
+  # TODO make config'able?
+  setKey: ->
     'migrations'
 
   # Check a migration has been run
   exists: (name, callback) ->
-    @redisClient.sismember @_setKey(), name, (err, val) ->
+    @redisClient.sismember @setKey(), name, (err, val) ->
       callback err, (val is 1)
 
   test: (name, callback) ->
@@ -85,7 +86,7 @@ module.exports = class Migrate
               migration.up (err) -> nextMigrationStep err, migration
 
             (migration, nextMigrationStep) =>
-              @redisClient.sadd @_setKey(), migration.name, nextMigrationStep
+              @redisClient.sadd @setKey(), migration.name, nextMigrationStep
 
           ], nextMigration
         , next
@@ -95,7 +96,7 @@ module.exports = class Migrate
   down: (callback) ->
     async.waterfall [
       (next) =>
-        @redisClient.smembers @_setKey(), next
+        @redisClient.smembers @setKey(), next
       (migrationsAlreadyRun, next) =>
         # TODO remove fibrous
         fibrous.run =>
@@ -110,7 +111,7 @@ module.exports = class Migrate
         , next
 
       (lastMigrationName, next) =>
-        @redisClient.srem @_setKey(), lastMigrationName, next
+        @redisClient.srem @setKey(), lastMigrationName, next
 
     ], callback
 
@@ -122,7 +123,7 @@ module.exports = class Migrate
           next err, filenames?.sort()
 
       (filenames, next) =>
-        @redisClient.smembers @_setKey(), (err, members) -> next err, filenames, members
+        @redisClient.smembers @setKey(), (err, members) -> next err, filenames, members
 
       (filenames, migrationsAlreadyRun, next) =>
         names = filenames.map (filename) =>

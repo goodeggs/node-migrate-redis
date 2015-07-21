@@ -1,13 +1,17 @@
-# node-migrate-mongo
+# node-migrate-redis
 
-Migrations for MongoDB
+Migrations for Redis
 
 [![build status][travis-badge]][travis-link]
 [![npm version][npm-badge]][npm-link]
 [![mit license][license-badge]][license-link]
 [![we're hiring][hiring-badge]][hiring-link]
 
-node-migrate-mongo enables data migrations in your existing project.  The state of your migrations is stored in the database specified in the `mongo` property of your `Migratefile.coffee`.  By default, this collection is called `migration_versions`.  See the Usage section (and let's be honest: the code) for more information.
+**A port of [node-migrate-mongo](https://github.com/goodeggs/node-migrate-mongo) with storage of past migrations in Redis instead of MongoDB.**
+
+node-migrate-redis enables data migrations in your existing project.
+The state of your migrations is stored in a redis set called 'migrations'.
+See the Usage section (and let's be honest: the code) for more information.
 
 Despite the name, this module does not borrow from TJ's [node-migrate](https://github.com/tj/node-migrate), though it follows very similar conventions.
 
@@ -19,7 +23,7 @@ In your existing project where you'd like to have migrations:
 npm install --save node-migrate-mongo
 cat << EOF- > Migratefile.coffee
   module.exports =
-    mongo: 'mongodb://localhost/your_db'
+    redis: 'redis://localhost:6379'
 EOF
 migrate generate --name my_first_migration
 # edit it
@@ -32,8 +36,7 @@ migrate all
 * **before** -- An async function called before running a command.  Useful for connecting your app to its database.
 * **after** -- An async function called after running a command.
 * **afterTest** -- An async function called after running a migration test.
-* **mongo** -- A string or function that returns a mongo connection string.
-* **model** -- A reference to your custom `MigrationVersion` model.
+* **redis** -- A string or function that returns a redis connection URL.
 * **path** -- The place to store your migration files.  Defaults to `migrations`.
 * **ext** -- The extension for your migration files.  Defaults to `coffee`.
 * **template** -- The template used when generating migrations.
