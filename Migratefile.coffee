@@ -1,2 +1,2 @@
 module.exports =
-  mongo: 'localhost/node_migrate_mongo_test'
+  redis: 'localhost/node_migrate_redis_test'

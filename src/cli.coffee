@@ -7,17 +7,17 @@ module.exports = (config, argv) ->
     process.nextTick(cb)
 
   Migrate = require '../'
-  class CustomMigrate extends Migrate
+  class RedisMigrate extends Migrate
     log: config.log or (message) ->
       console.log message
     error: config.error or (err) ->
       console.error err.printStack is false and err.message or err.stack
       process.exit 1
 
-  # opts: ext, path, template, mongo
+  # opts: ext, path, template, redis
   trimmedConfig = {}
-  trimmedConfig[k] = v for k, v of config when k in ['ext', 'path', 'template', 'mongo']
-  migrate = new CustomMigrate trimmedConfig
+  trimmedConfig[k] = v for k, v of config when k in ['ext', 'path', 'template', 'redis']
+  migrate = new RedisMigrate trimmedConfig
 
   die = (message) ->
     err = new Error message
@@ -63,7 +63,7 @@ module.exports = (config, argv) ->
           else
             migrate.log 'No pending migrations'
           cb()
-        
+
     when 'all'
       steps.push migrate.all.bind(migrate)
 

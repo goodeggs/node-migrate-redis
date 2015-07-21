@@ -1,12 +1,12 @@
+fibrous = require 'fibrous'   # TODO remove me
 path = require 'path'
 fse = require 'fs-extra'
-mongoose = require 'mongoose'
-fibrous = require 'fibrous'
+redis = require 'redis'
 slugify = require 'slugify'
+async = require 'async'
 
-class Migrate
-  constructor: (@opts={}) ->
-    @_model = @opts.model
+module.exports = class Migrate
+  constructor: (@opts = {}) ->
     @opts.path ?= 'migrations'
     @opts.ext ?= 'coffee'
     @opts.template ?= """
@@ -20,27 +20,22 @@ class Migrate
           throw new Error('irreversible migration')
 
         test: (done) ->
-          console.log 'copying development to test'
-          require('child_process').exec "mongo test --eval \\"db.dropDatabase(); db.copyDatabase('development', 'test'); print('copied')\\"", ->
-            done()
+          # copy live/dev db to test db
+
+          # ... test before ...
+
+          # @up()
+
+          # ... test after ...
+
+          #  done()
     """
 
-  model: ->
-    @_model ?= do =>
-      @opts.mongo = @opts.mongo() if typeof @opts.mongo is 'function'
-      connection = mongoose.createConnection @opts.mongo
-
-      schema = new mongoose.Schema
-        name:  type: String, index: true, unique: true, required: true
-        createdAt:  type: Date, default: Date.now
-
-      connection.model 'MigrationVersion', schema, 'migration_versions'
+    @opts.redis = @opts.redis() if typeof @opts.redis is 'function'
+    @redisClient = redis.createClient @opts.redis ? {}
 
   log: (message) ->
     console.log message
-
-  error: (err) ->
-    throw err
 
   get: (name) ->
     name = name.replace new RegExp("\.#{@opts.ext}$"), ''
@@ -48,49 +43,99 @@ class Migrate
     migration.name = name
     migration
 
-  # Check a migration has been run
-  exists: fibrous (name) ->
-    @model().sync.findOne({name})?
+  # store previously-run migration names in a set.
+  _setKey: ->
+    'migrations'
 
-  test: fibrous (name) ->
+  # Check a migration has been run
+  exists: (name, callback) ->
+    @redisClient.sismember @_setKey(), name, (err, val) ->
+      callback err, (val is 1)
+
+  test: (name, callback) ->
     @log "Testing migration `#{name}`"
-    @get(name).sync.test()
+    @get(name).test(callback)
 
   # Run one migration by name
-  one: fibrous (name) ->
-    @sync.all([name])
+  one: (name, callback) ->
+    @all [name], callback
 
   # Run all provided migrations or all pending if not provided
-  all: fibrous (migrations) ->
-    migrations = @sync.pending() if !migrations?
-    for name in migrations
-      if @sync.exists(name)
-        return @error new Error "Migration `#{name}` has already been run"
-      migration = @get(name)
-      @log "Running migration `#{migration.name}`"
-      migration.sync.up()
-      @model().sync.create name: migration.name
+  # TODO this and `one` should be inverted!
+  all: (args...) ->
+    callback = args.pop()
+    migrations = args.pop()   # optional
 
-  down: fibrous ->
-    version = @model().sync.findOne {}, {name: 1}, {sort: 'name': -1}
-    return @error new Error("No migrations found!") if not version?
-    migration = @get(version.name)
-    @log "Reversing migration `#{migration.name}`"
-    migration.sync.down()
-    version.sync.remove()
+    async.waterfall [
+      (next) =>
+        if migrations then next null, migrations
+        else @pending next
+      (migrations, next) =>
+        async.eachSeries migrations, (name, nextMigration) =>
+          async.waterfall [
+            (nextMigrationStep) =>
+              @exists name, nextMigrationStep
+
+            (exists, nextMigrationStep) =>
+              if exists then nextMigrationStep new Error "Migration `#{name}` has already been run"
+              else nextMigrationStep null, @get(name)
+
+            (migration, nextMigrationStep) =>
+              @log "Running migration `#{migration.name}`"
+              migration.up (err) -> nextMigrationStep err, migration
+
+            (migration, nextMigrationStep) =>
+              @redisClient.sadd @_setKey(), migration.name, nextMigrationStep
+
+          ], nextMigration
+        , next
+    ], callback
+
+
+  down: (callback) ->
+    async.waterfall [
+      (next) =>
+        @redisClient.smembers @_setKey(), next
+      (migrationsAlreadyRun, next) =>
+        # TODO remove fibrous
+        fibrous.run =>
+          if migrationsAlreadyRun?.length
+            lastMigrationName = migrationsAlreadyRun.sort()[migrationsAlreadyRun.length - 1]
+          if not lastMigrationName
+            throw new Error("No migrations found!")
+          migration = @get(lastMigrationName)
+          @log "Reversing migration `#{migration.name}`"
+          migration.sync.down()
+          return lastMigrationName
+        , next
+
+      (lastMigrationName, next) =>
+        @redisClient.srem @_setKey(), lastMigrationName, next
+
+    ], callback
 
   # Return a list of pending migrations
-  pending: fibrous ->
-    filenames = fse.sync.readdir(@opts.path).sort()
-    migrationsAlreadyRun = @model().sync.distinct('name')
-    names = filenames.map (filename) =>
-      return unless (match = filename.match new RegExp "^([^_].+)\.#{@opts.ext}$")
-      match[1]
-    .filter (name) ->
-      !!name
-    .filter (name) ->
-      name not in migrationsAlreadyRun
-    names
+  pending: (callback) ->
+    async.waterfall [
+      (next) =>
+        fse.readdir @opts.path, (err, filenames) =>
+          next err, filenames?.sort()
+
+      (filenames, next) =>
+        @redisClient.smembers @_setKey(), (err, members) -> next err, filenames, members
+
+      (filenames, migrationsAlreadyRun, next) =>
+        names = filenames.map (filename) =>
+          return unless (match = filename.match new RegExp "^([^_].+)\.#{@opts.ext}$")
+          match[1]
+        .filter (name) ->
+          !!name
+        .filter (name) ->
+          name not in migrationsAlreadyRun
+
+        next null, names
+    ], (err, names) -> callback err, names
+
 
   # Generate a stub migration file
   generate: fibrous (name) ->
@@ -100,6 +145,3 @@ class Migrate
     fse.sync.mkdirp @opts.path
     fse.sync.writeFile filename, @opts.template
     filename
-
-module.exports = Migrate
-
