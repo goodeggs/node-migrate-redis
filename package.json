@@ -24,7 +24,7 @@
     "interpret": "^0.3.10",
     "liftoff": "^2.0.0",
     "minimist": "^1.1.0",
-    "redis": "^0.12.1",
+    "redis": "^2.4.2",
     "slugify": "^0.1.0",
     "v8flags": "^1.0.8"
   },
