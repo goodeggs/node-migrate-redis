@@ -1,6 +1,6 @@
 {
   "name": "node-migrate-redis",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Migrations for Redis",
   "author": "Good Eggs <open-source@goodeggs.com>",
   "license": "MIT",
