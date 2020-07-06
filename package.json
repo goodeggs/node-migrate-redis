@@ -19,7 +19,6 @@
   "bugs": "https://github.com/goodeggs/node-migrate-redis/issues",
   "dependencies": {
     "async": "^0.9.0",
-    "fibrous": "^0.4.0",
     "fs-extra": "^0.13.0",
     "interpret": "^1.0.4",
     "liftoff": "^2.3.0",

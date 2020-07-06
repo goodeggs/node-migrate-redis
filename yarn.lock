@@ -202,10 +202,6 @@ detect-file@^1.0.0:
   version "1.0.0"
   resolved "https://npm.goodeggs.com/detect-file/-/detect-file-1.0.0.tgz#f0d66d03672a825cb1b73bdb3fe62310c8e552b7"
 
-detect-libc@^1.0.3:
-  version "1.0.3"
-  resolved "https://npm.goodeggs.com/detect-libc/-/detect-libc-1.0.3.tgz#fa137c4bd698edf55cd5cd02ac559f91a4c4ba9b"
-
 diff@1.4.0:
   version "1.4.0"
   resolved "https://npm.goodeggs.com/diff/-/diff-1.4.0.tgz#7f28d2eb9ee7b15a97efd89ce63dcfdaa3ccbabf"
@@ -285,18 +281,6 @@ extglob@^2.0.4:
     regex-not "^1.0.0"
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
-
-fibers@>=0.6.7:
-  version "5.0.0"
-  resolved "https://npm.goodeggs.com/fibers/-/fibers-5.0.0.tgz#3a60e0695b3ee5f6db94e62726716fa7a59acc41"
-  dependencies:
-    detect-libc "^1.0.3"
-
-fibrous@^0.4.0:
-  version "0.4.0"
-  resolved "https://npm.goodeggs.com/fibrous/-/fibrous-0.4.0.tgz#09e1d8239beacaa6ec41991e752bf610fe7a1bb6"
-  dependencies:
-    fibers ">=0.6.7"
 
 fill-range@^4.0.0:
   version "4.0.0"
