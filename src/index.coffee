@@ -1,4 +1,3 @@
-fibrous = require 'fibrous'   # TODO remove me
 path = require 'path'
 fse = require 'fs-extra'
 redis = require 'redis'
@@ -103,17 +102,15 @@ module.exports = class Migrate
       (next) =>
         @redisClient.smembers @setKey(), next
       (migrationsAlreadyRun, next) =>
-        # TODO remove fibrous
-        fibrous.run =>
-          if migrationsAlreadyRun?.length
-            lastMigrationName = migrationsAlreadyRun.sort()[migrationsAlreadyRun.length - 1]
-          if not lastMigrationName
-            throw new Error("No migrations found!")
-          migration = @get(lastMigrationName)
-          @log "Reversing migration `#{migration.name}`"
-          migration.sync.down()
-          return lastMigrationName
-        , next
+        if migrationsAlreadyRun?.length
+          lastMigrationName = migrationsAlreadyRun.sort()[migrationsAlreadyRun.length - 1]
+        if not lastMigrationName
+          return next(new Error("No migrations found!"))
+        migration = @get(lastMigrationName)
+        @log "Reversing migration `#{migration.name}`"
+        migration.down (err) =>
+          return next(err) if err
+          return next(null, lastMigrationName)
 
       (lastMigrationName, next) =>
         @redisClient.srem @setKey(), lastMigrationName, next
@@ -144,10 +141,13 @@ module.exports = class Migrate
 
 
   # Generate a stub migration file
-  generate: fibrous (name) ->
+  generate: (name, done) ->
     name = "#{slugify name, '_'}"
     timestamp = (new Date()).toISOString().replace /\D/g, ''
     filename = "#{@opts.path}/#{timestamp}_#{name}.#{@opts.ext}"
-    fse.sync.mkdirp @opts.path
-    fse.sync.writeFile filename, @opts.template
-    filename
+    async.series [
+      ((innerDone) => fse.mkdirp @opts.path, innerDone)
+      ((innerDone) => fse.writeFile filename, @opts.template, innerDone)
+    ], (err) =>
+      return done(err) if err
+      done(null, filename)
