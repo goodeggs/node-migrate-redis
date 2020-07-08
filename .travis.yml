@@ -1,15 +1,10 @@
 sudo: required
-dist: trusty
-
 language: node_js
-
 node_js:
-  - '6'
-  - '8'
-
+  - "8"
+  - "12"
 services:
   - redis-server
-
 env:
   global:
     - NODE_ENV=test
