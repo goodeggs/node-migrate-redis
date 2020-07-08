@@ -20,7 +20,7 @@ Despite the name, this module does not borrow from TJ's [node-migrate](https://g
 In your existing project where you'd like to have migrations:
 
 ```
-yarn install --save node-migrate-mongo
+yarn add --save node-migrate-mongo
 cat << EOF- > Migratefile.coffee
   module.exports =
     redis: 'redis://localhost:6379'
@@ -51,7 +51,7 @@ when contributing to this project.
 
 ```
 $ git clone https://github.com/goodeggs/node-migrate-mongo && cd node-migrate-mongo
-$ yarn install
+$ yarn
 $ yarn test
 ```
 
