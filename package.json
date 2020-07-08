@@ -41,7 +41,7 @@
     "test": "mocha"
   },
   "publishConfig": {
-    "registry": "https://npm.goodeggs.com/",
+    "registry": "https://registry.npmjs.org/",
     "access": "public"
   }
 }

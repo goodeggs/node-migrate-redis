@@ -1,12 +1,10 @@
 sudo: required
-dist: trusty
 language: node_js
 node_js:
-- '6'
-- '8'
+  - "8"
+  - "12"
 services:
-- redis-server
+  - redis-server
 env:
   global:
-  - NODE_ENV=test
-  - secure: dxLWCIiHb581borgW4TetSoU98d5WohhyfhoL000De2M8iJavBNEjNwdD9PCaCzHSsWlKtarX1ev28tPfiH7nYV0k20KdsG9samEdK3ifFXWPfzoi667rxB1WfMgXzT0WrI8DYrZc7k3He3Ud+30KEbrwCp/U28vJ0YLN+erqYnJdmdNZeFTLXrH+c65b+YkRaff1zZt9Nx0Tf7xo7VRKJomtucIsQZf52AvdM4lGlO2zLdVAWAcsB/HVu14qrRROeAJqHY9Y+UR90prV1zSsekf8B9+uh80Up7Ia1jwYsVvncFlUxifD4n8USX732pZRRxI4nbHQg6TI/EnyWnKv8Nft5rUkr2uyv5/311TLPzcwCf5owsb4pCdzzjDaG+uBzwTVzPTdTKDvfptHo7ZvD7X1OIYlst3F3Mec695AUC11hhc7vk6iHVZzKxXcht6u+NeG/miNqi29y3quXxGla/5DVw8jXGrQIL+I9R/IXflAzKGgJMNh9Tvq/xX2v5wk9UoiHMUP9NbLTWs8zX1ui9V/+L7ZFlRRc5AE7ZIjiL64y/Cod8mjZ4wQjeBMnIgJUT5CLZEpyYySydHS4zA7MF7gfyxQjGwETRlWNQPMRnAfgtbOlFbiie8yiCU/FDCoPFnk/ste/9vV6FD+u9soHau5z8/oDSxzGxEvNw7GUE=
+    - NODE_ENV=test
